@@ -103,7 +103,8 @@ func startVsCodeServer(ctx context.Context) error {
 	}, &containertypes.HostConfig{
 		Binds: []string{
 			filepath.Join(cwd, files.Root) + ":/app",
-			filepath.Join(userHomeDir, "/.config") + ":/home/coder/.config",
+			filepath.Join(userHomeDir, "/.demoit/config") + ":/home/coder/.config",
+			filepath.Join(userHomeDir, "/.demoit/code-server-data") + ":/home/coder/.local/share/code-server",
 		},
 		PortBindings: nat.PortMap{
 			nat.Port("8080/tcp"): []nat.PortBinding{{HostPort: strconv.Itoa(Port)}},
