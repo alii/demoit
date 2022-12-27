@@ -39,7 +39,7 @@ import (
 
 const (
 	Port          = 18080
-	dockerImage   = "codercom/code-server:4.8.3@sha256:c0e99db852b2c4e3602c912b658d1fd509d02643a1c437d1f7bb80197535cd76"
+	dockerImage   = "codercom/code-server:4.9.1@sha256:e713ed9a211b4ef8be4ec01ce9003aeeed4e1981c563c224f42635feccb08800"
 	containerName = "demoit-vscode"
 )
 
@@ -84,6 +84,12 @@ func startVsCodeServer(ctx context.Context) error {
 		return fmt.Errorf("unable to pull vscode image: %w", err)
 	}
 
+	userHomeDir, err := os.UserHomeDir()
+
+	if err != nil {
+		return fmt.Errorf("unable to get user home directory: %w", err)
+	}
+
 	body, err := client.ContainerCreate(ctx, &containertypes.Config{
 		Image: dockerImage,
 		User:  fmt.Sprintf("%s:%s", user.Uid, user.Gid),
@@ -91,8 +97,14 @@ func startVsCodeServer(ctx context.Context) error {
 		ExposedPorts: nat.PortSet{
 			nat.Port("8080/tcp"): struct{}{},
 		},
+		Env: []string{
+			"DOCKER_USER=" + user.Username,
+		},
 	}, &containertypes.HostConfig{
-		Binds: []string{filepath.Join(cwd, files.Root) + ":/app"},
+		Binds: []string{
+			filepath.Join(cwd, files.Root) + ":/app",
+			filepath.Join(userHomeDir, "/.config") + ":/home/coder/.config",
+		},
 		PortBindings: nat.PortMap{
 			nat.Port("8080/tcp"): []nat.PortBinding{{HostPort: strconv.Itoa(Port)}},
 		},
